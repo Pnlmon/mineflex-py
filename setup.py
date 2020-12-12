@@ -10,14 +10,11 @@ readme = ""
 with open("README.md") as f:
     readme = f.read()
 
-pkg_vars = ""
-with open("{MODULE}/_version.py") as fp:
-    exec(fp.read(), pkg_vars)
 
 setup(
     name="mineflex-py",
     author="Pnlmon",
-    url="https://https://github.com/Pnlmon/mineflex-py",
+    url="https://github.com/Pnlmon/mineflex-py",
     version=__version__,
     packages=["mineflex"],
     license="MIT",
