@@ -12,6 +12,10 @@ class APIMissingException(MineflexException):
     pass
 
 
+class InsufficientPermissions(MineflexException):
+    pass
+
+
 class UnknownException(MineflexException):
     pass
 

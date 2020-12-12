@@ -1,13 +1,25 @@
 from enum import Enum
 
 __all__ = (
-    "User",
+    "UserEndpoint",
+    "VersionEndpoint",
+    "ServerEndpoint"
 )
 
 
-class User(Enum):
+class UserEndpoint(Enum):
     login = "/user/login"
 
 
-class Server(Enum):
-    server_list = "/server/list"
+class VersionEndpoint(Enum):
+    paper = "/server/versions/PAPER/list"
+    bukkit = "/server/versions/BUKKIT/list"
+    spigot = "/server/versions/SPIGOT/list"
+    forge = "/server/versions/FORGE/list"
+    fabric = "/server/version/FABRIC/list"
+
+
+class ServerEndpoint(Enum):
+    list = "/server/list"
+    logs = "/server/actions/logs/"
+    version_endpoint = VersionEndpoint

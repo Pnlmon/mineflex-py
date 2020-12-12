@@ -1,7 +1,13 @@
 from urllib.parse import urljoin
 from requests import Session, codes
-from .endpoint import User
+from .endpoint import UserEndpoint, ServerEndpoint
+from .server import Server
 from .exceptions import *
+
+failed_reference = {
+    "404 page not found": APIMissingException,
+    "Forbidden": InsufficientPermissions
+}
 
 
 class MineflexSession(Session):
@@ -13,8 +19,10 @@ class MineflexSession(Session):
         url = urljoin(self.base_url, url)
         request_result = super(MineflexSession, self).request(method, url, *args, **kwargs)
 
-        if request_result.text == "404 page not found":
-            raise APIMissingException(request_result.text)
+        error_reference = failed_reference.get(request_result.text)
+
+        if error_reference:
+            raise error_reference(request_result.text)
 
         return request_result
 
@@ -31,7 +39,7 @@ class Mineflex:
 
     def login(self):
         attempt = self.session.post(
-            User.login.value,
+            UserEndpoint.login.value,
             json={
                 "email": self.email,
                 "password": self.password
@@ -44,3 +52,12 @@ class Mineflex:
 
         self.logged = True
         return True
+
+    def get_all_server(self):
+        all_server = self.session.get(ServerEndpoint.list.value).json()
+        return_list = []
+
+        for server in all_server:
+            return_list.append(Server(self.session, **server))
+
+        return return_list
