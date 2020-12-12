@@ -1,24 +1,35 @@
 from enum import Enum
-
-
-class Protocol:
-    def __init__(self, version, name):
-        self.version = version
-        self.name = name
+from .endpoint import ServerEndpoint
 
 
 class MineflexImage:
-    def __init__(self, ID:str, URL:str):
-        self.ID = ID
+    def __init__(self, URL: str):
         self.URL = URL
 
 
-class DataCenter:
+class DataCenter(Enum):
     BHS = "US1"
 
 
-class ServerType:
-    PAPER = "PAPER"
+class ServerState(Enum):
+    stopped = "STOPPED"
+    stopping = "STOPPING"
+    running = "RUNNING"
+
+
+class ServerType(Enum):
+    paper = "PAPER"
+
+
+class Protocol:
+    def __init__(self, name: str, version: int, title: str, image: MineflexImage,
+                 server_type: ServerType, build: int):
+        self.name = name
+        self.version = version
+        self.title = title
+        self.image = image
+        self.server_type = server_type
+        self.build = build
 
 
 class Server:
@@ -26,12 +37,21 @@ class Server:
     #                  datacenter: DataCenter, description: str, server_type: ServerType, image: MineflexImage
     def __init__(self, session, **kwargs):
         self.session = session
-        for (key, value) in kwargs.iteritems():
-            if hasattr(self, key):
-                setattr(self, key, value)
 
-        # [{"id": 244, "userId": 191, "ram": "5G", "protocolVersion": 753, "protocolName": "1.16.3",
-        #   "domain": "vibingcrusaders.us1.mineflex.io", "state": "STOPPED", "host": 1, "datacenter": "BHS",
-        #   "maxPlayers": 10, "description": "just vibing", "serverType": "PAPER", "imageId": 0}]
+        for (key, value) in kwargs.items():
+            setattr(self, key, value)
 
-    def
+    def get_logs(self):
+        return self.session.get(ServerEndpoint.logs.value + str(self.id)).json()
+
+    def get_protocol(self):
+        all_ver = self.session.get(
+            ServerEndpoint.version_endpoint[self.server_type.name].value
+        ).json()
+
+        for ver in all_ver:
+            if ver['protocolName'] == self.protocol.name:
+                return Protocol(
+                    ver['protocolName'], ver['protocolVersions'], ver['title'], MineflexImage(ver['imageUrl']),
+                    ServerType[ver['server_type'].lower()], build=ver['build']
+                )
