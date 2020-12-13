@@ -33,25 +33,44 @@ class Protocol:
 
 
 class Server:
-    # id: int, user_id: int, ram: int, protocol: Protocol, domain: str, state: str, host: int,
-    #                  datacenter: DataCenter, description: str, server_type: ServerType, image: MineflexImage
-    def __init__(self, session, **kwargs):
+    def __init__(self, session,
+                 id: int,
+                 user_id: int,
+                 ram: int,
+                 protocol_version: int,
+                 protocol_name: str,
+                 domain: str,
+                 state: str,
+                 host: int,
+                 datacenter: DataCenter or str,
+                 description: str,
+                 server_type: ServerType or str,
+                 max_player: int):
+
+        for (key, value) in locals().items():
+            setattr(self, key, value)
+
         self.session = session
 
-        for (key, value) in kwargs.items():
-            setattr(self, key, value)
+        if not isinstance(self.datacenter, DataCenter):
+            self.datacenter = DataCenter[self.datacenter]
+        if not isinstance(self.server_type, ServerType):
+            self.server_type = ServerType[self.server_type.lower()]
+
+        self.protocol = self.get_protocol()
 
     def get_logs(self):
         return self.session.get(ServerEndpoint.logs.value + str(self.id)).json()
 
     def get_protocol(self):
         all_ver = self.session.get(
-            ServerEndpoint.version_endpoint[self.server_type.name].value
+            ServerEndpoint.version_endpoint.value[self.server_type.name].value
         ).json()
 
         for ver in all_ver:
-            if ver['protocolName'] == self.protocol.name:
+            if ver['protocolName'] == self.protocol_name:
                 return Protocol(
                     ver['protocolName'], ver['protocolVersions'], ver['title'], MineflexImage(ver['imageUrl']),
-                    ServerType[ver['server_type'].lower()], build=ver['build']
+                    ServerType[ver['serverType'].lower()], build=ver['build']
                 )
+

@@ -58,6 +58,16 @@ class Mineflex:
         return_list = []
 
         for server in all_server:
-            return_list.append(Server(self.session, **server))
+            return_list.append(
+                Server(self.session, id=server.get("id"), user_id=server.get("userId"), ram=server.get("ram"), protocol_version=server.get("protocolVersion"),
+                       protocol_name=server.get("protocolName"),
+                       domain=server.get("domain"), state=server.get("state"), host=server.get("host"), datacenter=server.get("datacenter"), max_player=server.get("maxPlayers"),
+                       description=server.get("description"), server_type=server.get("serverType"))
+            )
+        # session, id: int, user_id: int, ram: int, protocol: Protocol, domain: str, state: str, host: int,
+        # datacenter: DataCenter, description: str, server_type: ServerType, image: MineflexImage
+        # {"id": 244, "userId": 191, "ram": "5G", "protocolVersion": 753, "protocolName": "1.16.3",
+        #  "domain": "vibingcrusaders.us1.mineflex.io", "state": "STOPPED", "host": 1, "datacenter": "", "maxPlayers": 10,
+        #  "description": "just vibing", "serverType": "PAPER", "imageId": 18}
 
         return return_list
