@@ -3,7 +3,8 @@ from enum import Enum
 __all__ = (
     "UserEndpoint",
     "VersionEndpoint",
-    "ServerEndpoint"
+    "ServerEndpoint",
+    "PlayerEndpoint"
 )
 
 
@@ -23,3 +24,8 @@ class ServerEndpoint(Enum):
     list = "/server/list"
     logs = "/server/actions/logs/"
     version_endpoint = VersionEndpoint
+
+
+class PlayerEndpoint(Enum):
+    command = "/player/configuration/command/"
+    config = "/player/configuration/list/"

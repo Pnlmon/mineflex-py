@@ -26,3 +26,7 @@ class ServerException(MineflexException):
 
 class InvalidCredentials(MineflexException):
     pass
+
+
+class ServerOfflineException(ServerException):
+    pass

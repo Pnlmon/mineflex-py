@@ -1,12 +1,15 @@
 from urllib.parse import urljoin
 from requests import Session, codes
 from .endpoint import UserEndpoint, ServerEndpoint
-from .server import Server
+from .server import json_to_server
 from .exceptions import *
+
+from json.decoder import JSONDecodeError
 
 failed_reference = {
     "404 page not found": APIMissingException,
-    "Forbidden": InsufficientPermissions
+    "Forbidden": InsufficientPermissions,
+    "Server Must be in Running State to Execute Commands": ServerOfflineException
 }
 
 
@@ -18,11 +21,23 @@ class MineflexSession(Session):
     def request(self, method, url, *args, **kwargs):
         url = urljoin(self.base_url, url)
         request_result = super(MineflexSession, self).request(method, url, *args, **kwargs)
+        error_reference = None
 
-        error_reference = failed_reference.get(request_result.text)
+        try:
+            request_json = request_result.json()
+
+            if not isinstance(request_json, list):
+                error_reference = failed_reference.get(
+                    request_json.get("error")
+                )
+            # Inside try because json() might throw an error
+        except JSONDecodeError:
+            error_reference = failed_reference.get(request_result.text)
 
         if error_reference:
-            raise error_reference(request_result.text)
+            raise error_reference(
+                list(failed_reference.keys())[list(failed_reference.values()).index(error_reference)]
+            )
 
         return request_result
 
@@ -58,16 +73,22 @@ class Mineflex:
         return_list = []
 
         for server in all_server:
+            print(server)
             return_list.append(
-                Server(self.session, id=server.get("id"), user_id=server.get("userId"), ram=server.get("ram"), protocol_version=server.get("protocolVersion"),
-                       protocol_name=server.get("protocolName"),
-                       domain=server.get("domain"), state=server.get("state"), host=server.get("host"), datacenter=server.get("datacenter"), max_player=server.get("maxPlayers"),
-                       description=server.get("description"), server_type=server.get("serverType"))
+                json_to_server(self.session, server)
             )
-        # session, id: int, user_id: int, ram: int, protocol: Protocol, domain: str, state: str, host: int,
-        # datacenter: DataCenter, description: str, server_type: ServerType, image: MineflexImage
-        # {"id": 244, "userId": 191, "ram": "5G", "protocolVersion": 753, "protocolName": "1.16.3",
-        #  "domain": "vibingcrusaders.us1.mineflex.io", "state": "STOPPED", "host": 1, "datacenter": "", "maxPlayers": 10,
-        #  "description": "just vibing", "serverType": "PAPER", "imageId": 18}
 
         return return_list
+
+    def get_server(self, id):
+        server = self.session.get(
+            "%s/%s" % (ServerEndpoint.list.value, str(id))
+        ).json()
+        print(server)
+        return json_to_server(self.session, server)
+
+        # session, id: int, user_id: int, ram: int, protocol: Protocol, domain: str, state: str, host: int,
+        # datacenter: DataCenter, description: str, server_type: ServerType, image: MineflexImage {"id": 244,
+        # "userId": 191, "ram": "5G", "protocolVersion": 753, "protocolName": "1.16.3", "domain":
+        # "vibingcrusaders.us1.mineflex.io", "state": "STOPPED", "host": 1, "datacenter": "", "maxPlayers": 10,
+        # "description": "just vibing", "serverType": "PAPER", "imageId": 18}

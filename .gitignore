@@ -72,3 +72,4 @@ target/
 # pycharm stuff
 .idea/
 /testing.py
+/upload_to_pypi.bat
